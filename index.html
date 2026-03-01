@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROBOWARS — Live Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#f5f5f8;--panel:#ffffff;--card:#fafafe;
+      --red:#d32f2f;--red-light:#ffebee;--red-soft:#ef5350;
+      --blue:#1565c0;--blue-light:#e3f2fd;--blue-soft:#42a5f5;
+      --amber:#e65100;--amber-bg:#fff3e0;--amber-soft:#fb8c00;
+      --green:#2e7d32;--green-bg:#e8f5e9;
+      --text:#1a1a2e;--dim:#78788c;--border:#e0e0ea;--border-strong:#c8c8d8;
+      --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:0 4px 12px rgba(0,0,0,.08);
+      --font-h:'Orbitron',sans-serif;--font-m:'Share Tech Mono',monospace;
+    }
+    html,body{height:100%;overflow:hidden;font-family:var(--font-m);background:var(--bg);color:var(--text)}
+
+    /* ===== STATIC L-FRAME SHELL ===== */
+    .shell{
+      display:grid;
+      grid-template-columns:1fr 310px;
+      grid-template-rows:1fr 155px;
+      height:100vh;width:100vw;
+    }
+
+    /* DYNAMIC CENTER */
+    .center{
+      grid-row:1;grid-column:1;
+      overflow-y:auto;padding:32px 40px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;
+      background:var(--bg);
+    }
+
+    /* STATIC RIGHT BAR */
+    .rail-right{
+      grid-row:1/3;grid-column:2;
+      background:var(--panel);border-left:1px solid var(--border);
+      overflow-y:auto;display:flex;flex-direction:column;
+      box-shadow:-2px 0 12px rgba(0,0,0,.04);
+    }
+
+    /* STATIC BOTTOM BAR */
+    .rail-bottom{
+      grid-row:2;grid-column:1;
+      background:var(--panel);border-top:1px solid var(--border);
+      overflow-x:auto;overflow-y:hidden;
+      display:flex;align-items:stretch;gap:12px;padding:14px 20px;
+      box-shadow:0 -2px 12px rgba(0,0,0,.04);
+    }
+
+    /* ===== RIGHT RAIL ===== */
+    .rail-right .r-head{
+      padding:18px 20px 14px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .r-head .logo{
+      font-family:var(--font-h);font-weight:900;font-size:1rem;letter-spacing:4px;
+      color:var(--red);
+    }
+    .r-head .live{display:flex;align-items:center;gap:6px;font-size:.65rem;color:var(--red);font-weight:600}
+    .r-head .live .dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+    @keyframes blink{50%{opacity:.15}}
+
+    .r-section{padding:16px 20px;border-bottom:1px solid var(--border)}
+    .r-section:last-child{border-bottom:none}
+    .r-label{
+      font-family:var(--font-h);font-size:.5rem;letter-spacing:3px;
+      color:var(--dim);text-transform:uppercase;margin-bottom:10px;
+    }
+
+    /* Match cards */
+    .m-card{
+      background:var(--card);border:1px solid var(--border);border-radius:8px;
+      padding:10px 12px;margin-bottom:8px;position:relative;
+      box-shadow:var(--shadow);transition:box-shadow .2s;
+    }
+    .m-card:hover{box-shadow:var(--shadow-md)}
+    .m-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+    .m-card.next::before{background:var(--amber)}
+    .m-card.q::before{background:var(--border-strong)}
+    .m-card .m-tag{font-family:var(--font-h);font-size:.45rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+    .m-card.next .m-tag{color:var(--amber)}
+    .m-card.q .m-tag{color:var(--dim)}
+    .m-card .m-vs{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:600}
+    .m-card .m-vs .r{color:var(--red)}
+    .m-card .m-vs .b{color:var(--blue)}
+    .m-card .m-vs .x{color:var(--amber);font-family:var(--font-h);font-size:.55rem}
+    .m-card .m-meta{font-size:.6rem;color:var(--dim);margin-top:4px}
+
+    /* Leaderboard */
+    .lb-row{display:flex;align-items:center;gap:10px;padding:7px 8px;font-size:.75rem;border-radius:6px;transition:background .15s}
+    .lb-row:hover{background:var(--bg)}
+    .lb-row .rank{
+      width:22px;height:22px;text-align:center;line-height:22px;
+      font-family:var(--font-h);font-size:.6rem;font-weight:700;
+      border-radius:50%;background:var(--bg);
+    }
+    .lb-row .rank.g{background:#fff8e1;color:#f57f17}
+    .lb-row .rank.s{background:#f5f5f5;color:#9e9e9e}
+    .lb-row .rank.br{background:#fbe9e7;color:#bf360c}
+    .lb-row .nm{flex:1;font-weight:600}
+    .lb-row .st{color:var(--blue);font-size:.65rem;font-weight:600}
+
+    /* Clock */
+    .clock{font-size:.7rem;color:var(--dim);padding:12px 20px;text-align:center;margin-top:auto;border-top:1px solid var(--border)}
+
+    /* ===== CENTER — CURRENT MATCH ===== */
+    .fight-tag{
+      font-family:var(--font-h);font-size:.55rem;letter-spacing:5px;color:var(--red);
+      text-transform:uppercase;display:flex;align-items:center;gap:8px;font-weight:700;
+    }
+    .fight-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+
+    .match-box{
+      background:var(--panel);border:1px solid var(--border);border-radius:16px;
+      padding:36px 48px;width:100%;max-width:580px;text-align:center;position:relative;
+      box-shadow:var(--shadow-md);
+    }
+    .match-box::after{content:'';position:absolute;top:0;left:15%;right:15%;height:3px;border-radius:0 0 3px 3px;
+      background:linear-gradient(90deg,var(--red),var(--amber),var(--blue))}
+
+    .match-id{font-size:.6rem;color:var(--dim);margin-bottom:20px;letter-spacing:2px}
+
+    .vs-row{display:flex;align-items:center;justify-content:center;gap:28px;margin-bottom:28px}
+    .t{text-align:center}
+    .t .icon{font-size:2rem;margin-bottom:6px}
+    .t .name{font-family:var(--font-h);font-size:.75rem;font-weight:700;letter-spacing:2px}
+    .t .college{font-size:.6rem;color:var(--dim);margin-top:2px}
+    .t .score{font-size:2.2rem;font-weight:700;margin-top:6px}
+    .t.red .name{color:var(--red)}
+    .t.red .score{color:var(--red)}
+    .t.blue .name{color:var(--blue)}
+    .t.blue .score{color:var(--blue)}
+    .vs-x{font-family:var(--font-h);font-size:1.4rem;font-weight:900;color:var(--amber)}
+
+    /* Main Timer */
+    .timer-display{font-size:4rem;font-weight:700;letter-spacing:6px;line-height:1;color:var(--text)}
+    .timer-display.warn{color:var(--amber)}
+    .timer-display.crit{color:var(--red);animation:tblink .5s infinite}
+    @keyframes tblink{50%{opacity:.35}}
+    .timer-sub{font-size:.55rem;color:var(--dim);letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+
+    .t-btns{display:flex;gap:8px;justify-content:center;margin-top:16px}
+    .tb{
+      font-family:var(--font-h);font-size:.55rem;letter-spacing:2px;text-transform:uppercase;
+      padding:8px 20px;border:none;border-radius:6px;cursor:pointer;
+      transition:transform .1s,box-shadow .15s;font-weight:600;
+    }
+    .tb:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+    .tb:active{transform:translateY(0)}
+    .tb.go{background:var(--amber);color:#fff}
+    .tb.pa{background:var(--blue);color:#fff}
+    .tb.re{background:var(--bg);color:var(--dim);border:1px solid var(--border)}
+
+    .status-row{display:flex;gap:12px;justify-content:center;margin-top:16px}
+    .chip{
+      font-size:.55rem;color:var(--dim);display:flex;align-items:center;gap:5px;
+      padding:4px 10px;background:var(--bg);border-radius:12px;border:1px solid var(--border);
+    }
+    .chip .d{width:5px;height:5px;border-radius:50%}
+    .chip .d.on{background:var(--green)}
+    .chip .d.live{background:var(--red);animation:blink 1s infinite}
+
+    /* Keyboard hint */
+    .hint{font-size:.5rem;color:var(--dim);letter-spacing:1px;text-align:center;opacity:.6}
+    .hint kbd{background:var(--panel);padding:1px 6px;border-radius:4px;border:1px solid var(--border);font-weight:600}
+
+    /* ===== BOTTOM RAIL — MINI TIMERS ===== */
+    .mini-t{
+      min-width:170px;background:var(--card);border:1px solid var(--border);border-radius:10px;
+      padding:14px 16px;cursor:pointer;transition:border-color .2s,box-shadow .2s;flex-shrink:0;
+      display:flex;flex-direction:column;justify-content:center;position:relative;user-select:none;
+      box-shadow:var(--shadow);
+    }
+    .mini-t::before{content:'';position:absolute;top:0;left:12px;right:12px;height:3px;border-radius:0 0 2px 2px;background:var(--border);transition:background .2s}
+    .mini-t.running::before{background:var(--green)}
+    .mini-t.paused::before{background:var(--amber)}
+    .mini-t.ended::before{background:var(--red)}
+    .mini-t:hover{border-color:var(--border-strong);box-shadow:var(--shadow-md)}
+    .mini-t .mt-head{display:flex;justify-content:space-between;font-size:.5rem;color:var(--dim);letter-spacing:2px;margin-bottom:6px;font-weight:600}
+    .mini-t .mt-val{font-size:1.6rem;font-weight:700;text-align:center;letter-spacing:3px;transition:color .2s;color:var(--text)}
+    .mini-t.running .mt-val{color:var(--green)}
+    .mini-t.paused .mt-val{color:var(--amber)}
+    .mini-t.ended .mt-val{color:var(--red)}
+    .mini-t .mt-bar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+    .mini-t .mt-bar div{height:100%;background:var(--blue);border-radius:2px;transition:width .4s}
+    .mini-t.running .mt-bar div{background:var(--green)}
+    .mini-t.ended .mt-bar div{background:var(--red)}
+    .mini-t .mt-btns{display:flex;gap:4px;justify-content:center;margin-top:8px}
+    .mt-b{
+      width:24px;height:24px;border:1px solid var(--border);border-radius:5px;
+      background:var(--panel);color:var(--dim);cursor:pointer;font-size:.6rem;
+      display:grid;place-items:center;transition:all .15s;
+    }
+    .mt-b:hover{background:var(--bg);color:var(--text);border-color:var(--border-strong)}
+
+    /* Add timer */
+    .add-t{
+      min-width:80px;display:grid;place-items:center;
+      border:2px dashed var(--border);border-radius:10px;cursor:pointer;
+      color:var(--dim);font-size:1.4rem;transition:border-color .2s,color .2s;flex-shrink:0;
+    }
+    .add-t:hover{border-color:var(--blue);color:var(--blue)}
+
+    /* ===== MODAL ===== */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:100;place-items:center;backdrop-filter:blur(4px)}
+    .modal-bg.on{display:grid}
+    .modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:28px;width:90%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,.12)}
+    .modal h4{font-family:var(--font-h);font-size:.6rem;letter-spacing:3px;color:var(--blue);margin-bottom:18px}
+    .modal label{display:block;font-size:.5rem;letter-spacing:2px;color:var(--dim);margin-bottom:4px;text-transform:uppercase;font-weight:600}
+    .modal input{
+      width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+      color:var(--text);font-family:var(--font-m);font-size:.85rem;outline:none;margin-bottom:14px;
+    }
+    .modal input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,101,192,.1)}
+    .modal .m-row{display:flex;gap:8px;margin-top:8px}
+    .modal .m-row .tb{flex:1;text-align:center}
+
+    /* scrollbar */
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+    ::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ======= DYNAMIC CENTER ======= -->
+  <main class="center" id="center">
+    <div class="fight-tag"><span class="dot"></span> NOW FIGHTING</div>
+
+    <div class="match-box">
+      <div class="match-id" id="matchId">MATCH #001 — ROUND 1</div>
+
+      <div class="vs-row">
+        <div class="t red">
+          <div class="icon">🤖</div>
+          <div class="name" id="rName">IRON FURY</div>
+          <div class="college">IIT Delhi</div>
+          <div class="score" id="rScore">0</div>
+        </div>
+        <div class="vs-x">VS</div>
+        <div class="t blue">
+          <div class="icon">🦾</div>
+          <div class="name" id="bName">CHAOS BOT</div>
+          <div class="college">IIT Bombay</div>
+          <div class="score" id="bScore">0</div>
+        </div>
+      </div>
+
+      <div class="timer-display" id="mainTimer">03:00</div>
+      <div class="timer-sub">BATTLE TIMER</div>
+
+      <div class="t-btns">
+        <button class="tb go" onclick="MT.start()">▶ START</button>
+        <button class="tb pa" onclick="MT.pause()">⏸ PAUSE</button>
+        <button class="tb re" onclick="MT.reset()">↺ RESET</button>
+      </div>
+
+      <div class="status-row">
+        <div class="chip"><span class="d live"></span>Arena Live</div>
+        <div class="chip"><span class="d on"></span>Bots Ready</div>
+        <div class="chip" id="phaseChip"><span class="d"></span><span id="phase">WAITING</span></div>
+      </div>
+    </div>
+
+    <div class="hint">
+      <kbd>R</kbd> +Red &nbsp; <kbd>B</kbd> +Blue &nbsp; <kbd>Z</kbd> Reset Scores
+    </div>
+  </main>
+
+  <!-- ======= STATIC RIGHT RAIL ======= -->
+  <aside class="rail-right">
+    <div class="r-head">
+      <span class="logo">ROBOWARS</span>
+      <span class="live"><span class="dot"></span>LIVE</span>
+    </div>
+
+    <!-- Next Match -->
+    <div class="r-section">
+      <div class="r-label">Next Match</div>
+      <div class="m-card next">
+        <div class="m-tag">UP NEXT</div>
+        <div class="m-vs"><span class="r">STEEL BITE</span><span class="x">VS</span><span class="b">THUNDER JAW</span></div>
+        <div class="m-meta">Round 1 · 15kg</div>
+      </div>
+    </div>
+
+    <!-- Queue -->
+    <div class="r-section">
+      <div class="r-label">Queue</div>
+      <div class="m-card q">
+        <div class="m-tag">QUEUE #3</div>
+        <div class="m-vs"><span class="r">VENOM X</span><span class="x">VS</span><span class="b">RAPTOR MK2</span></div>
+        <div class="m-meta">Round 1 · 15kg</div>
+      </div>
+      <div class="m-card q">
+        <div class="m-tag">QUEUE #4</div>
+        <div class="m-vs"><span class="r">BLAZE CORE</span><span class="x">VS</span><span class="b">NULL BYTE</span></div>
+        <div class="m-meta">QF · 8kg</div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="r-section">
+      <div class="r-label">Leaderboard</div>
+      <div class="lb-row"><span class="rank g">1</span><span class="nm">IRON FURY</span><span class="st">3-0</span></div>
+      <div class="lb-row"><span class="rank s">2</span><span class="nm">CHAOS BOT</span><span class="st">2-1</span></div>
+      <div class="lb-row"><span class="rank br">3</span><span class="nm">STEEL BITE</span><span class="st">2-1</span></div>
+      <div class="lb-row"><span class="rank">4</span><span class="nm">VENOM X</span><span class="st">1-1</span></div>
+      <div class="lb-row"><span class="rank">5</span><span class="nm">RAPTOR MK2</span><span class="st">1-2</span></div>
+    </div>
+
+    <div class="clock" id="clock">00:00:00</div>
+  </aside>
+
+  <!-- ======= STATIC BOTTOM RAIL ======= -->
+  <nav class="rail-bottom" id="timersRow">
+    <!-- mini timers injected by JS -->
+    <div class="add-t" onclick="openModal()">+</div>
+  </nav>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h4>NEW TIMER</h4>
+    <label>Label</label>
+    <input id="mLabel" placeholder="e.g. Arena B" />
+    <label>Seconds</label>
+    <input id="mDur" type="number" value="180" min="10" max="3600" />
+    <div class="m-row">
+      <button class="tb re" onclick="closeModal()">CANCEL</button>
+      <button class="tb go" onclick="createTimer()">CREATE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* === Utils === */
+const fmt=s=>{const m=Math.floor(s/60),ss=s%60;return`${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`};
+
+/* === Clock === */
+const clockEl=document.getElementById('clock');
+setInterval(()=>{clockEl.textContent=new Date().toLocaleTimeString('en-GB')},1000);
+
+/* === Main Timer === */
+const MT=(()=>{
+  let total=180,rem=180,iv=null,on=false;
+  const el=document.getElementById('mainTimer'),ph=document.getElementById('phase');
+  const render=()=>{
+    el.textContent=fmt(rem);
+    el.classList.remove('warn','crit');
+    if(rem<=30&&rem>10)el.classList.add('warn');
+    else if(rem<=10)el.classList.add('crit');
+  };
+  const tick=()=>{if(rem<=0){pause();ph.textContent='DONE';return}rem--;render()};
+  const start=()=>{if(on)return;on=true;ph.textContent='FIGHT';iv=setInterval(tick,1000)};
+  const pause=()=>{on=false;clearInterval(iv);if(rem>0)ph.textContent='PAUSED'};
+  const reset=()=>{pause();rem=total;ph.textContent='WAITING';render()};
+  render();
+  return{start,pause,reset};
+})();
+
+/* === Scores === */
+(()=>{
+  let r=0,b=0;
+  const rE=document.getElementById('rScore'),bE=document.getElementById('bScore');
+  document.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT')return;
+    if(e.key==='r'||e.key==='R'){r++;rE.textContent=r}
+    if(e.key==='b'||e.key==='B'){b++;bE.textContent=b}
+    if(e.key==='z'||e.key==='Z'){r=b=0;rE.textContent=0;bE.textContent=0}
+  });
+})();
+
+/* === Mini Timers === */
+const row=document.getElementById('timersRow');
+const addBtn=row.querySelector('.add-t');
+const timers=[];
+
+function spawnTimer(label,sec){
+  const o={total:sec,rem:sec,on:false,iv:null};
+  const d=document.createElement('div');d.className='mini-t';
+  d.innerHTML=`
+    <div class="mt-head"><span>${label}</span><span class="mt-st">READY</span></div>
+    <div class="mt-val">${fmt(sec)}</div>
+    <div class="mt-bar"><div style="width:100%"></div></div>
+    <div class="mt-btns">
+      <button class="mt-b p" title="Play/Pause">▶</button>
+      <button class="mt-b" title="Reset">↺</button>
+      <button class="mt-b" title="Delete" style="color:var(--red)">✕</button>
+    </div>`;
+  const val=d.querySelector('.mt-val'),bar=d.querySelector('.mt-bar div'),st=d.querySelector('.mt-st');
+  const render=()=>{
+    val.textContent=fmt(o.rem);
+    bar.style.width=(o.rem/o.total*100)+'%';
+    d.classList.remove('running','paused','ended');
+    if(o.rem<=0){d.classList.add('ended');st.textContent='DONE'}
+    else if(o.on){d.classList.add('running');st.textContent='RUN'}
+    else{d.classList.add('paused');st.textContent='PAUSE'}
+  };
+  const go=()=>{if(o.on||o.rem<=0)return;o.on=true;render();o.iv=setInterval(()=>{o.rem--;render();if(o.rem<=0)stop()},1000)};
+  const stop=()=>{o.on=false;clearInterval(o.iv);render()};
+  const rst=()=>{stop();o.rem=o.total;d.classList.remove('running','paused','ended');st.textContent='READY';render()};
+  d.addEventListener('click',e=>{if(e.target.closest('.mt-b'))return;if(o.rem<=0)rst();else o.on?stop():go()});
+  d.querySelector('.p').addEventListener('click',()=>{if(o.rem<=0)rst();else o.on?stop():go()});
+  d.querySelectorAll('.mt-b')[1].addEventListener('click',rst);
+  d.querySelectorAll('.mt-b')[2].addEventListener('click',()=>{stop();d.remove()});
+  row.insertBefore(d,addBtn);
+  timers.push(o);
+}
+
+// defaults
+spawnTimer('ARENA A',180);
+spawnTimer('ARENA B',180);
+spawnTimer('PIT',120);
+spawnTimer('FINALS',300);
+
+/* === Modal === */
+const modalBg=document.getElementById('modalBg');
+function openModal(){modalBg.classList.add('on');document.getElementById('mLabel').value='';document.getElementById('mDur').value=180;document.getElementById('mLabel').focus()}
+function closeModal(){modalBg.classList.remove('on')}
+function createTimer(){
+  const l=document.getElementById('mLabel').value.trim()||'TIMER';
+  const s=Math.max(10,Math.min(3600,parseInt(document.getElementById('mDur').value)||180));
+  spawnTimer(l.toUpperCase(),s);closeModal();
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+</script>
+</body>
+</html>
