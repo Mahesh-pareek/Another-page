@@ -7,7 +7,7 @@ import WinnerOverlay from './components/WinnerOverlay'
 import BottomBar from './components/BottomBar'
 import CollapsiblePanel from './components/CollapsiblePanel'
 
-const MATCH_DURATION = 180 // 3 minutes per rulebook §9.3
+const MATCH_DURATION = 1800 // 3 minutes in tenths-of-seconds (180s × 10)
 
 const defaultSchedule = [
   { id: 1, team1: 'KYB 3', team2: 'SHUNYA 2', status: 'live', type: 'match', winner: null },
@@ -47,7 +47,7 @@ export default function App() {
     setLogs(prev => [{ text, type, ts: Date.now() }, ...prev].slice(0, 30))
   }, [])
 
-  // ---- Timer tick ----
+  // ---- Timer tick (100ms precision) ----
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
       timerRef.current = setInterval(() => {
@@ -60,7 +60,7 @@ export default function App() {
           }
           return prev - 1
         })
-      }, 1000)
+      }, 100)
     }
     return () => clearInterval(timerRef.current)
   }, [isRunning, addLog])
