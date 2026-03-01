@@ -9,6 +9,7 @@ export default function MatchSchedule({ schedule, activeMatchId, onSelect, onAdd
   const [newT1, setNewT1] = useState('')
   const [newT2, setNewT2] = useState('')
   const [newType, setNewType] = useState('match')
+  const [open, setOpen] = useState(true)
 
   const handleSubmit = () => {
     if (!newT1.trim() || !newT2.trim()) return
@@ -20,18 +21,20 @@ export default function MatchSchedule({ schedule, activeMatchId, onSelect, onAdd
   }
 
   return (
-    <div className="panel" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-      <div className="panel-title" style={{ display: 'flex', alignItems: 'center' }}>
+    <div className={`panel collapsible-panel ${open ? 'panel-open' : 'panel-collapsed'}`} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <div className="panel-title panel-toggle" style={{ display: 'flex', alignItems: 'center' }} onClick={() => setOpen(o => !o)}>
         <span className="dot"></span> MATCH SCHEDULE
+        <span className={`chevron ${open ? 'chevron-open' : ''}`}>&#9662;</span>
         <button
           className="btn btn-small btn-start"
-          style={{ marginLeft: 'auto', padding: '3px 10px' }}
-          onClick={() => setShowAdd(!showAdd)}
+          style={{ marginLeft: '8px', padding: '3px 10px' }}
+          onClick={e => { e.stopPropagation(); setShowAdd(!showAdd) }}
         >
           {showAdd ? '✕' : '+ ADD'}
         </button>
       </div>
 
+      <div className={`panel-body ${open ? 'panel-body-open' : 'panel-body-closed'}`} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       {showAdd && (
         <div style={{
           padding: '10px',
@@ -56,6 +59,8 @@ export default function MatchSchedule({ schedule, activeMatchId, onSelect, onAdd
               <option value="match">Match</option>
               <option value="resurrection">Resurrection</option>
               <option value="rumble">Rumble</option>
+              <option value="semifinal">Semi Final</option>
+              <option value="final">Final</option>
             </select>
           </div>
           <button className="btn btn-start btn-small" onClick={handleSubmit}
@@ -115,6 +120,7 @@ export default function MatchSchedule({ schedule, activeMatchId, onSelect, onAdd
             No matches scheduled
           </div>
         )}
+      </div>
       </div>
     </div>
   )

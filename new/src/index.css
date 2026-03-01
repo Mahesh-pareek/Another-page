@@ -158,6 +158,59 @@ body {
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
+/* ---- Collapsible Panels ---- */
+.panel-toggle {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin: -6px -8px 0;
+}
+.panel-collapsed .panel-toggle {
+  margin-bottom: 0;
+}
+.panel-open .panel-toggle {
+  margin-bottom: 10px;
+}
+.panel-toggle:hover {
+  background: var(--bg-card-hover);
+}
+.chevron {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  transition: transform 0.25s ease;
+  display: inline-block;
+}
+.chevron-open {
+  transform: rotate(0deg);
+}
+.chevron:not(.chevron-open) {
+  transform: rotate(-90deg);
+}
+.panel-body {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+}
+.panel-body-open {
+  max-height: 1200px;
+  opacity: 1;
+}
+.panel-body-closed {
+  max-height: 0;
+  opacity: 0;
+}
+.panel-collapsed {
+  padding-bottom: 8px;
+}
+
+/* Ensure collapsible body doesn't break inner layouts */
+.collapsible-panel .panel-body > .scores-row,
+.collapsible-panel .panel-body > .special-timers {
+  width: 100%;
+}
+
 /* ---- Header ---- */
 .header {
   display: flex;
@@ -445,6 +498,34 @@ body {
   margin-top: 3px;
   opacity: 0.5;
 }
+.special-timer .st-controls {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-top: 6px;
+}
+.st-btn {
+  font-family: var(--font-display);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-deep);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.st-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
+.st-btn:active { transform: scale(0.95); }
+.st-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+.st-btn-start { border-color: var(--green); color: var(--green); }
+.st-btn-start:hover:not(:disabled) { background: #00884a12; }
+.st-btn-pause { border-color: var(--yellow); color: var(--yellow); }
+.st-btn-pause:hover { background: #b8950012; }
+.st-btn-reset { border-color: var(--red); color: var(--red); padding: 4px 8px; }
+.st-btn-reset:hover { background: #cc113312; }
 .special-timer .st-bar {
   width: 100%; height: 3px;
   background: var(--bg-deep);

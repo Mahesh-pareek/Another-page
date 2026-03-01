@@ -5,14 +5,17 @@ import SpecialTimers from './components/SpecialTimers'
 import MatchSchedule from './components/MatchSchedule'
 import WinnerOverlay from './components/WinnerOverlay'
 import BottomBar from './components/BottomBar'
+import CollapsiblePanel from './components/CollapsiblePanel'
 
 const MATCH_DURATION = 180 // 3 minutes per rulebook §9.3
 
 const defaultSchedule = [
-  { id: 1, team1: 'IRONCLAD', team2: 'VORTEX', status: 'live', type: 'match', winner: null },
-  { id: 2, team1: 'PHANTOM', team2: 'WARHAMMER', status: 'upcoming', type: 'match', winner: null },
-  { id: 3, team1: 'BUZZSAW', team2: 'TEMPEST', status: 'upcoming', type: 'match', winner: null },
-  { id: 4, team1: 'CRUSHER', team2: 'BOLT', status: 'upcoming', type: 'rumble', winner: null },
+  { id: 1, team1: 'KYB 3', team2: 'SHUNYA 2', status: 'live', type: 'match', winner: null },
+  { id: 2, team1: 'XENFORGE', team2: 'KYB 2', status: 'upcoming', type: 'match', winner: null },
+  { id: 3, team1: 'ABHEDYA', team2: 'SHUNYA 3', status: 'upcoming', type: 'match', winner: null },
+  { id: 4, team1: 'KYB 1', team2: 'KRONOS', status: 'upcoming', type: 'match', winner: null },
+  { id: 5, team1: 'FEARLESS', team2: 'IITD', status: 'upcoming', type: 'match', winner: null },
+  { id: 6, team1: 'SHUNYA 1', team2: 'NETEAM', status: 'upcoming', type: 'match', winner: null },
 ]
 
 const blankScores = () => ({ aggression: 0, control: 0, damage: 0 })
@@ -199,7 +202,7 @@ export default function App() {
         </div>
 
         {/* Teams */}
-        <div className="panel">
+        <CollapsiblePanel title="TEAMS" defaultOpen={true}>
           <div className="versus-row">
             <div className="team-card team1">
               <div className="team-label">⬡ TEAM ALPHA</div>
@@ -221,10 +224,10 @@ export default function App() {
               />
             </div>
           </div>
-        </div>
+        </CollapsiblePanel>
 
         {/* Timer */}
-        <div className="panel timer-section">
+        <CollapsiblePanel title="MATCH TIMER" defaultOpen={true} className="timer-section">
           <MatchTimer
             timeLeft={timeLeft}
             totalTime={MATCH_DURATION}
@@ -238,18 +241,22 @@ export default function App() {
             onJudgesDecision={handleJudgesDecision}
             timeUp={timeLeft <= 0}
           />
-        </div>
+        </CollapsiblePanel>
 
         {/* Scores */}
-        <div className="scores-row">
-          <ScorePanel team={1} teamName={team1Name} scores={team1Scores}
-            onUpdate={(cat, d) => handleUpdateScore(1, cat, d)} />
-          <ScorePanel team={2} teamName={team2Name} scores={team2Scores}
-            onUpdate={(cat, d) => handleUpdateScore(2, cat, d)} />
-        </div>
+        <CollapsiblePanel title="SCORES" defaultOpen={true}>
+          <div className="scores-row">
+            <ScorePanel team={1} teamName={team1Name} scores={team1Scores}
+              onUpdate={(cat, d) => handleUpdateScore(1, cat, d)} />
+            <ScorePanel team={2} teamName={team2Name} scores={team2Scores}
+              onUpdate={(cat, d) => handleUpdateScore(2, cat, d)} />
+          </div>
+        </CollapsiblePanel>
 
         {/* Special Timers (Pin 20s, Immobilization 10s) */}
-        <SpecialTimers addLog={addLog} />
+        <CollapsiblePanel title="SPECIAL TIMERS" defaultOpen={true}>
+          <SpecialTimers addLog={addLog} />
+        </CollapsiblePanel>
       </div>
 
       {/* ===== SIDEBAR (Static L — Right) ===== */}
@@ -261,10 +268,9 @@ export default function App() {
           <div className="event-line">TRYST 2026 · IIT DELHI · 8KG</div>
         </div>
 
-        <div className="panel">
-          <div className="panel-title"><span className="dot"></span> MATCH TYPE</div>
+        <CollapsiblePanel title="MATCH TYPE" defaultOpen={true}>
           <div className="match-type-selector">
-            {['match', 'resurrection', 'rumble'].map(t => (
+            {['match', 'resurrection', 'rumble', 'semifinal', 'final'].map(t => (
               <button key={t}
                 className={`match-type-btn ${matchType === t ? 'active' : ''}`}
                 onClick={() => setMatchType(t)}>
@@ -272,7 +278,7 @@ export default function App() {
               </button>
             ))}
           </div>
-        </div>
+        </CollapsiblePanel>
 
         <MatchSchedule
           schedule={schedule} activeMatchId={activeMatchId}
@@ -280,8 +286,7 @@ export default function App() {
           onDelete={handleDeleteMatch}
         />
 
-        <div className="panel">
-          <div className="panel-title"><span className="dot"></span> CONTROLS</div>
+        <CollapsiblePanel title="CONTROLS" defaultOpen={true}>
           <div className="quick-actions">
             <button className="quick-action-btn" onClick={handleStartPause}>
               <span className="qa-icon">{isRunning ? '⏸' : '▶'}</span>
@@ -303,10 +308,8 @@ export default function App() {
               <span className="kbd">L</span>
             </button>
           </div>
-        </div>
+        </CollapsiblePanel>
       </div>
-
-      {/* ===== BOTTOM BAR (Static L — Bottom) ===== */}
       <div className="bottom-bar">
         <BottomBar done={done} total={schedule.length} matchType={matchType} logs={logs} />
       </div>

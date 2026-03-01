@@ -45,14 +45,19 @@ function PinTimer({ addLog }) {
     return () => clearInterval(ref.current)
   }, [running, addLog])
 
-  const toggle = () => {
-    if (time <= 0) {
-      setTime(MAX)
-      setRunning(false)
-      return
-    }
+  const handleStart = () => {
+    if (time <= 0) return
     if (!running) addLog('📌 PIN TIMER STARTED')
-    setRunning(prev => !prev)
+    setRunning(true)
+  }
+  const handlePause = () => {
+    if (running) addLog('⏸ PIN TIMER PAUSED at ' + time + 's')
+    setRunning(false)
+  }
+  const handleReset = () => {
+    setRunning(false)
+    clearInterval(ref.current)
+    setTime(MAX)
   }
 
   let cls = 'special-timer'
@@ -66,16 +71,23 @@ function PinTimer({ addLog }) {
   else if (time <= WARN) barColor = 'var(--orange)'
 
   return (
-    <div className={cls} onClick={toggle}>
+    <div className={cls}>
       <div className="st-label">📌 PIN TIMER</div>
       <div className="st-time">{time}s</div>
       <div className="st-bar">
         <div className="st-bar-fill" style={{ width: `${pct}%`, background: barColor }} />
       </div>
-      <div className="st-hint">
-        {time <= 0 ? 'Click to reset' : running ? 'Click to stop' : 'Click to start'}
-        {' · Max 20s'}
+      <div className="st-controls">
+        {!running ? (
+          <button className="st-btn st-btn-start" onClick={handleStart} disabled={time <= 0}>
+            ▶ {time < MAX && time > 0 ? 'Resume' : 'Start'}
+          </button>
+        ) : (
+          <button className="st-btn st-btn-pause" onClick={handlePause}>⏸ Pause</button>
+        )}
+        <button className="st-btn st-btn-reset" onClick={handleReset}>↺</button>
       </div>
+      <div className="st-hint">Max 20s · Warn at 10s</div>
     </div>
   )
 }
@@ -103,14 +115,19 @@ function ImmobilizationTimer({ addLog }) {
     return () => clearInterval(ref.current)
   }, [running, addLog])
 
-  const toggle = () => {
-    if (time <= 0) {
-      setTime(MAX)
-      setRunning(false)
-      return
-    }
+  const handleStart = () => {
+    if (time <= 0) return
     if (!running) addLog('⏱ IMMOBILIZATION CHECK STARTED')
-    setRunning(prev => !prev)
+    setRunning(true)
+  }
+  const handlePause = () => {
+    if (running) addLog('⏸ IMMOBILIZATION PAUSED at ' + time + 's')
+    setRunning(false)
+  }
+  const handleReset = () => {
+    setRunning(false)
+    clearInterval(ref.current)
+    setTime(MAX)
   }
 
   let cls = 'special-timer'
@@ -124,16 +141,23 @@ function ImmobilizationTimer({ addLog }) {
   else if (time <= 5) barColor = 'var(--orange)'
 
   return (
-    <div className={cls} onClick={toggle}>
+    <div className={cls}>
       <div className="st-label">💀 IMMOBILE CHECK</div>
       <div className="st-time">{time}s</div>
       <div className="st-bar">
         <div className="st-bar-fill" style={{ width: `${pct}%`, background: barColor }} />
       </div>
-      <div className="st-hint">
-        {time <= 0 ? 'Click to reset' : running ? 'Click to stop' : 'Click to start'}
-        {' · 1 inch in 10s'}
+      <div className="st-controls">
+        {!running ? (
+          <button className="st-btn st-btn-start" onClick={handleStart} disabled={time <= 0}>
+            ▶ {time < MAX && time > 0 ? 'Resume' : 'Start'}
+          </button>
+        ) : (
+          <button className="st-btn st-btn-pause" onClick={handlePause}>⏸ Pause</button>
+        )}
+        <button className="st-btn st-btn-reset" onClick={handleReset}>↺</button>
       </div>
+      <div className="st-hint">Must move 1″ in 10s</div>
     </div>
   )
 }
